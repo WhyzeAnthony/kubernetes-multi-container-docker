@@ -1,0 +1,35 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ajmason/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true ajmason/react-test npm test
+
+after_success:
+  - docker build -t ajmason/multi-client ./client
+  - docker build -t ajmason/multi-nginx ./nginx
+  - docker build -t ajmason/multi-server ./server
+  - docker build -t ajmason/multi-worker ./worker
+  # Log in to the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to Docker Hub
+  - docker push ajmason/multi-client
+  - docker push ajmason/multi-nginx
+  - docker push ajmason/multi-server
+  - docker push ajmason/multi-worker
+
+deploy:
+  provider: elasticbeanstalk
+  region: "us-east-1"
+  app: "Docker-React"
+  env: "MultiDocker-env"
+  bucket_name: "elasticbeanstalk-us-east-1-153475131564"
+  bucket_path: "MultiDocker"
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key: $AWS_SECRET_KEY

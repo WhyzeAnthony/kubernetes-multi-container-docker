@@ -24,9 +24,6 @@ spec:
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
-#              This is specific to postgres docker containers
-#              without the subfolder postgres will complain about
-#              storing data in a regular volume mount with no subpath
               subPath: postgres
           env:
             - name: PGPASSWORD
